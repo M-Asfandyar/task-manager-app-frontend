@@ -22,7 +22,7 @@ export const requestFirebaseNotificationPermission = async () => {
   try {
     await Notification.requestPermission();
     const token = await getToken(messaging, {
-      vapidKey: 'BA1pMySvChywgdhvnsISUjphkB5VcoNwmGUcGQfaPNDnr71BVbdnxE4PlHwmRzNvw8zbyoTYs_WpYbsXcXT5YLM'  // Add your VAPID key here
+      vapidKey: 'BA1pMySvChywgdhvnsISUjphkB5VcoNwmGUcGQfaPNDnr71BVbdnxE4PlHwmRzNvw8zbyoTYs_WpYbsXcXT5YLM' 
     });
     console.log('FCM Token:', token);
     return token;
