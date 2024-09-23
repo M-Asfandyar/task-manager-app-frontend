@@ -4,10 +4,14 @@ import HighPriorityNotification from './components/HighPriorityNotification';
 import TaskProgress from './components/TaskProgress';  // For progress tracking
 import TaskDependencies from './components/TaskDependencies';  // For task dependencies
 
+// Import Firebase functions for FCM
+import { requestFirebaseNotificationPermission, onMessageListener } from './firebase';  // Make sure firebase.js is set up
+
 const App = () => {
   const [userToken, setUserToken] = useState('');
   const [tasks, setTasks] = useState([]);  // Store tasks
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);  // State to store FCM notifications
 
   // Function to retrieve tasks from the backend
   const fetchTasks = useCallback(async () => {
@@ -26,7 +30,7 @@ const App = () => {
     }
   }, [userToken]);  // Depend on userToken
 
-  // On component mount, fetch the tasks
+  // On component mount, fetch the tasks and request notification permission
   useEffect(() => {
     const token = localStorage.getItem('jwtToken');  // Retrieve JWT token from local storage
     if (token) {
@@ -35,7 +39,25 @@ const App = () => {
     if (userToken) {
       fetchTasks();  // Fetch tasks if user is authenticated
     }
-  }, [userToken, fetchTasks]);  // Now includes fetchTasks
+
+    // Request permission for notifications
+    requestFirebaseNotificationPermission()
+      .then((fcmToken) => {
+        console.log('FCM Token:', fcmToken);
+        // Save FCM token to backend (if needed)
+      })
+      .catch((err) => {
+        console.error('Unable to get permission for notifications:', err);
+      });
+
+    // Listen for incoming messages
+    onMessageListener()
+      .then((payload) => {
+        console.log('Message received: ', payload);
+        setNotification(payload.notification);  // Store the notification
+      })
+      .catch((err) => console.error('Failed to receive message: ', err));
+  }, [userToken, fetchTasks]);
 
   // Function to update task progress
   const updateTaskProgress = async (taskId, newProgress) => {
@@ -68,6 +90,15 @@ const App = () => {
       {userToken && <NotificationBar userToken={userToken} />}
       {userToken && <HighPriorityNotification userToken={userToken} />}
       
+      {/* Display the received FCM notification */}
+      {notification && (
+        <div className="notification">
+          <h2>New Notification</h2>
+          <p>{notification.title}</p>
+          <p>{notification.body}</p>
+        </div>
+      )}
+
       {/* Task List */}
       {loading ? (
         <p>Loading tasks...</p>
