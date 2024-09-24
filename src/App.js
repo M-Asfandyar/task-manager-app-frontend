@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';  // Replace Switch with Routes
 import NotificationBar from './components/NotificationBar';
 import HighPriorityNotification from './components/HighPriorityNotification';
 import TaskProgress from './components/TaskProgress';  // For progress tracking
 import TaskDependencies from './components/TaskDependencies';  // For task dependencies
+import Dashboard from './components/Dashboard';  // Import the Dashboard component
 
 // Import Firebase functions for FCM
 import { requestFirebaseNotificationPermission, onMessageListener } from './firebase';  // Make sure firebase.js is set up
@@ -86,41 +88,53 @@ const App = () => {
   };
 
   return (
-    <div>
-      {userToken && <NotificationBar userToken={userToken} />}
-      {userToken && <HighPriorityNotification userToken={userToken} />}
-      
-      {/* Display the received FCM notification */}
-      {notification && (
-        <div className="notification">
-          <h2>New Notification</h2>
-          <p>{notification.title}</p>
-          <p>{notification.body}</p>
-        </div>
-      )}
+    <Router>
+      <div>
+        {userToken && <NotificationBar userToken={userToken} />}
+        {userToken && <HighPriorityNotification userToken={userToken} />}
 
-      {/* Task List */}
-      {loading ? (
-        <p>Loading tasks...</p>
-      ) : (
-        <div>
-          {tasks.map((task) => (
-            <div key={task._id}>
-              <h3>{task.title}</h3>
-              <TaskProgress
-                progress={task.progress}
-                taskId={task._id}
-                updateProgress={updateTaskProgress}
-              />
-              <TaskDependencies
-                dependencies={task.dependencies}
-                canUpdateTask={canUpdateTask(task.dependencies)}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+        {/* Display the received FCM notification */}
+        {notification && (
+          <div className="notification">
+            <h2>New Notification</h2>
+            <p>{notification.title}</p>
+            <p>{notification.body}</p>
+          </div>
+        )}
+
+        <Routes>  {/* Replace Switch with Routes */}
+          {/* Task Management Route */}
+          <Route
+            path="/"
+            element={
+              loading ? (
+                <p>Loading tasks...</p>
+              ) : (
+                <div>
+                  {tasks.map((task) => (
+                    <div key={task._id}>
+                      <h3>{task.title}</h3>
+                      <TaskProgress
+                        progress={task.progress}
+                        taskId={task._id}
+                        updateProgress={updateTaskProgress}
+                      />
+                      <TaskDependencies
+                        dependencies={task.dependencies}
+                        canUpdateTask={canUpdateTask(task.dependencies)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+          />
+
+          {/* Dashboard Route */}
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 
